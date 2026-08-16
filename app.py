@@ -11,7 +11,7 @@ from quiz_logic import Question, average, check_answer, make_quiz
 
 
 st.set_page_config(
-    page_title="Prime & Cube Rockstars",
+    page_title="Prime & Cube Practice",
     page_icon="⚡",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -141,7 +141,7 @@ def render_header(subtitle: str) -> None:
         f"""
         <div class="hero">
           <div class="eyebrow">⚡ Number training</div>
-          <h1>Prime & Cube<br>Rockstars</h1>
+          <h1>Prime & Cube</h1>
           <p>{html.escape(subtitle)}</p>
         </div>
         """,
@@ -164,7 +164,7 @@ def render_setup() -> None:
             options=[5, 10, 15, 20],
             value=10,
         )
-        submitted = st.form_submit_button("Start rocking  →", type="primary", use_container_width=True)
+        submitted = st.form_submit_button("Start practice  →", type="primary", use_container_width=True)
 
     if submitted:
         start_quiz(mode or "Mixed", question_count)

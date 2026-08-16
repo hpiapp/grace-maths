@@ -1,4 +1,4 @@
-"""Question generation and answer checking for Prime & Cube Rockstars."""
+"""Question generation and answer checking for Prime & Cube practice."""
 
 from __future__ import annotations
 
