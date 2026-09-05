@@ -1,4 +1,4 @@
-"""Streamlit app for practising prime numbers and cubes."""
+"""Streamlit app for practising number skills."""
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ import time
 
 import streamlit as st
 
+from conversion_logic import ChoiceQuestion, check_choice, make_conversion_quiz
 from quiz_logic import Question, average, check_answer, make_quiz
 
 
 st.set_page_config(
-    page_title="Prime & Cube Practice",
+    page_title="Grace Maths Practice",
     page_icon="⚡",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -51,9 +52,11 @@ st.markdown(
         overflow: hidden;
       }
       .hero:after {
-        content: '³'; position: absolute; right: 1rem; top: -2.4rem;
+        position: absolute; right: 1rem; top: -2.4rem;
         font: 700 12rem 'Space Grotesk'; color: rgba(255,255,255,.06);
       }
+      .hero.number:after { content: '³'; }
+      .hero.conversion:after { content: '%'; }
       .eyebrow { color: var(--lime); font-weight: 800; text-transform: uppercase; letter-spacing: .14em; font-size: .78rem; }
       .hero h1 { color: white !important; margin: .3rem 0 .4rem; font-size: clamp(2rem, 7vw, 3.5rem); line-height: 1; }
       .hero p { color: rgba(255,255,255,.78); margin: 0; max-width: 34rem; }
@@ -75,6 +78,10 @@ st.markdown(
       }
       .feedback.good { background: #eaffbe; color: #315309; border: 1px solid #c7ef74; }
       .feedback.try { background: #fff0ef; color: #8a2d2a; border: 1px solid #ffc6c2; }
+      .explanation {
+        background: #f3f0ff; border-left: 4px solid var(--purple); border-radius: 12px;
+        color: #473b70; padding: .85rem 1rem; margin: -.25rem 0 1rem; line-height: 1.5;
+      }
       .stButton > button, .stFormSubmitButton > button {
         border-radius: 12px; min-height: 3rem; font-weight: 800; border: 0;
       }
@@ -110,14 +117,19 @@ def initialise_state() -> None:
         "last_result": None,
         "streak": 0,
         "best_streak": 0,
+        "current_area": "Primes & cubes",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
 
-def start_quiz(mode: str, question_count: int) -> None:
-    st.session_state.quiz = make_quiz(mode, question_count)
+def start_quiz(area: str, mode: str, question_count: int) -> None:
+    if area == "Fractions & percentages":
+        st.session_state.quiz = make_conversion_quiz(mode, question_count)
+    else:
+        st.session_state.quiz = make_quiz(mode, question_count)
+    st.session_state.current_area = area
     st.session_state.question_index = 0
     st.session_state.results = []
     st.session_state.answered = False
@@ -136,12 +148,13 @@ def reset_quiz() -> None:
     st.session_state.answered = False
 
 
-def render_header(subtitle: str) -> None:
+def render_header(title: str, subtitle: str, area: str) -> None:
+    theme = "conversion" if area == "Fractions & percentages" else "number"
     st.markdown(
         f"""
-        <div class="hero">
+        <div class="hero {theme}">
           <div class="eyebrow">⚡ Number training</div>
-          <h1>Prime & Cube</h1>
+          <h1>{html.escape(title)}</h1>
           <p>{html.escape(subtitle)}</p>
         </div>
         """,
@@ -150,14 +163,37 @@ def render_header(subtitle: str) -> None:
 
 
 def render_setup() -> None:
-    render_header("Fast questions, instant feedback, and a race against your own best time.")
+    area = st.segmented_control(
+        "Practice area",
+        ["Primes & cubes", "Fractions & percentages"],
+        default="Primes & cubes",
+        key="practice_area",
+        label_visibility="collapsed",
+    ) or "Primes & cubes"
+
+    if area == "Fractions & percentages":
+        render_header(
+            "Conversion Lab",
+            "Build quick links between fractions, decimals, percentages, and changing prices.",
+            area,
+        )
+        modes = ["Mixed practice", "Conversions", "Percentage change"]
+        default_mode = "Mixed practice"
+    else:
+        render_header(
+            "Prime & Cube",
+            "Fast questions, instant feedback, and a race against your own best time.",
+            area,
+        )
+        modes = ["Mixed", "Prime numbers", "Cube numbers"]
+        default_mode = "Mixed"
 
     st.subheader("Set up a practice session")
-    with st.form("setup_form"):
+    with st.form(f"setup_form_{area}"):
         mode = st.segmented_control(
             "Choose a challenge",
-            ["Mixed", "Prime numbers", "Cube numbers"],
-            default="Mixed",
+            modes,
+            default=default_mode,
         )
         question_count = st.select_slider(
             "Number of questions",
@@ -167,23 +203,36 @@ def render_setup() -> None:
         submitted = st.form_submit_button("Start practice  →", type="primary", use_container_width=True)
 
     if submitted:
-        start_quiz(mode or "Mixed", question_count)
+        start_quiz(area, mode or default_mode, question_count)
         st.rerun()
 
     with st.expander("How it works"):
-        st.markdown(
-            """
-            - **Prime questions:** type every prime in the range. Commas, spaces, or “and” all work.
-            - **Cube questions:** type the value of the cube, from 1³ to 12³.
-            - The clock starts when each question appears and stops when the answer is submitted.
-            - Ranges are **inclusive**, so both end numbers count if they are prime.
-            """
-        )
+        if area == "Fractions & percentages":
+            st.markdown(
+                """
+                - Convert between **fractions, decimals, and percentages** using four answer choices.
+                - Percentage-change questions use friendly prices designed for mental maths.
+                - Every mixed session tests both a decrease from the original price and the increase needed from the new price.
+                - Remember: after a 25% decrease, the starting value has changed—so a 25% increase does not undo it.
+                """
+            )
+        else:
+            st.markdown(
+                """
+                - **Prime questions:** type every prime in the range. Commas, spaces, or “and” all work.
+                - **Cube questions:** type the value of the cube, from 1³ to 12³.
+                - The clock starts when each question appears and stops when the answer is submitted.
+                - Ranges are **inclusive**, so both end numbers count if they are prime.
+                """
+            )
 
 
-def record_answer(question: Question, raw_answer: str) -> None:
+def record_answer(question: Question | ChoiceQuestion, raw_answer: str) -> None:
     elapsed = max(0.0, time.perf_counter() - st.session_state.question_started)
-    is_correct = check_answer(question, raw_answer)
+    if isinstance(question, ChoiceQuestion):
+        is_correct = check_choice(question, raw_answer)
+    else:
+        is_correct = check_answer(question, raw_answer)
 
     if is_correct:
         st.session_state.streak += 1
@@ -217,7 +266,7 @@ def next_question() -> None:
 def render_quiz() -> None:
     total = len(st.session_state.quiz)
     index = st.session_state.question_index
-    question: Question = st.session_state.quiz[index]
+    question: Question | ChoiceQuestion = st.session_state.quiz[index]
 
     top_left, top_right = st.columns([3, 1])
     with top_left:
@@ -229,7 +278,20 @@ def render_quiz() -> None:
         )
     st.progress((index + 1) / total)
 
-    label = "Prime finder" if question.kind == "prime" else "Cube power"
+    labels = {
+        "prime": "Prime finder",
+        "cube": "Cube power",
+        "fraction_to_percentage": "Fraction → %",
+        "percentage_to_fraction": "% → Fraction",
+        "decimal_to_percentage": "Decimal → %",
+        "percentage_to_decimal": "% → Decimal",
+        "fraction_to_decimal": "Fraction → Decimal",
+        "decimal_to_fraction": "Decimal → Fraction",
+        "percentage_decrease": "Price decrease",
+        "percentage_restore": "Back to the original",
+        "percentage_same_increase": "Down, then up",
+    }
+    label = labels.get(question.kind, "Number challenge")
     st.markdown(
         f"""
         <div class="question-card">
@@ -242,17 +304,24 @@ def render_quiz() -> None:
     )
 
     if not st.session_state.answered:
-        with st.form(f"answer_form_{index}", clear_on_submit=False):
-            answer = st.text_input(
-                "Your answer",
-                placeholder="Type your answer here…",
-                autocomplete="off",
-            )
+        with st.form(f"answer_form_{index}_{question.kind}", clear_on_submit=False):
+            if isinstance(question, ChoiceQuestion):
+                answer = st.radio(
+                    "Choose your answer",
+                    question.options,
+                    index=None,
+                )
+            else:
+                answer = st.text_input(
+                    "Your answer",
+                    placeholder="Type your answer here…",
+                    autocomplete="off",
+                )
             submitted = st.form_submit_button("Lock it in", type="primary", use_container_width=True)
 
         if submitted:
-            if not answer.strip():
-                st.warning("Type an answer before locking it in.")
+            if answer is None or not answer.strip():
+                st.warning("Choose or type an answer before locking it in.")
             else:
                 record_answer(question, answer)
                 st.rerun()
@@ -266,6 +335,12 @@ def render_quiz() -> None:
         else:
             st.markdown(
                 f'<div class="feedback try">Not this time. The answer is <strong>{html.escape(result["answer"])}</strong>.</div>',
+                unsafe_allow_html=True,
+            )
+
+        if isinstance(question, ChoiceQuestion):
+            st.markdown(
+                f'<div class="explanation"><strong>Why:</strong> {html.escape(question.explanation)}</div>',
                 unsafe_allow_html=True,
             )
 
@@ -296,7 +371,9 @@ def render_results() -> None:
     else:
         subtitle = "Nice effort. Have another go and beat this score."
 
-    render_header(subtitle)
+    area = st.session_state.current_area
+    title = "Conversion Lab" if area == "Fractions & percentages" else "Prime & Cube"
+    render_header(title, subtitle, area)
     st.subheader("Session complete")
     col1, col2, col3 = st.columns(3)
     col1.metric("Score", f"{correct}/{total}")

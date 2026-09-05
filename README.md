@@ -1,6 +1,11 @@
-# Grace Maths Quiz
+# Grace Maths Practice
 
-A Streamlit practice app for learning prime numbers up to 100 and cube numbers from 1³ to 12³.
+A Streamlit practice app for learning:
+
+- prime numbers up to 100
+- cube numbers from 1³ to 12³
+- conversions between fractions, decimals, and percentages
+- percentage decreases and the percentage increase needed to restore an original price
 
 ## Run locally
 
@@ -17,7 +22,9 @@ Choose this repository in Streamlit Community Cloud and use:
 - Main file path: `app.py`
 - Python version: `3.12`
 
-The app includes mixed, prime-only, and cube-only sessions; randomised questions; response timing; flexible answer input; streaks; scoring; and answer review.
+The app includes randomised questions, mental-maths-friendly multiple choice, response timing, flexible prime-number input, streaks, scoring, explanations, and answer review.
+
+Every mixed fractions-and-percentages session includes both sides of a price change. For example, reducing £80 by 25% gives £60, but returning from £60 to £80 requires a 33⅓% increase—not 25%.
 
 ## Run the tests
 

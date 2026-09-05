@@ -1,6 +1,13 @@
 import random
 import unittest
 
+from conversion_logic import (
+    CONVERSION_FACTS,
+    build_conversion_bank,
+    build_percentage_change_pairs,
+    check_choice,
+    make_conversion_quiz,
+)
 from quiz_logic import Question, build_question_bank, check_answer, make_quiz, parse_numbers, primes_between
 
 
@@ -34,6 +41,31 @@ class QuizLogicTests(unittest.TestCase):
         quiz = make_quiz("Cube numbers", 20, random.Random(7))
         self.assertEqual(len(quiz), 20)
         self.assertTrue(all(left != right for left, right in zip(quiz, quiz[1:])))
+
+    def test_conversion_questions_have_four_distinct_choices(self):
+        bank = build_conversion_bank(random.Random(3))
+        self.assertEqual(len(bank), len(CONVERSION_FACTS) * 6)
+        for question in bank:
+            self.assertEqual(len(question.options), 4)
+            self.assertEqual(len(set(question.options)), 4)
+            self.assertIn(question.answer, question.options)
+
+    def test_twenty_five_percent_decrease_does_not_reverse_with_same_increase(self):
+        pairs = build_percentage_change_pairs(random.Random(4))
+        decrease, restore, same_increase = pairs[0]
+        self.assertEqual(decrease.answer, "£60")
+        self.assertEqual(restore.answer, "33⅓%")
+        self.assertEqual(same_increase.answer, "£75")
+        self.assertTrue(check_choice(restore, "33⅓%"))
+        self.assertFalse(check_choice(restore, "25%"))
+
+    def test_mixed_conversion_quiz_guarantees_both_change_directions(self):
+        quiz = make_conversion_quiz("Mixed practice", 5, random.Random(8))
+        kinds = {question.kind for question in quiz}
+        self.assertIn("percentage_decrease", kinds)
+        self.assertIn("percentage_restore", kinds)
+        self.assertTrue(any("_to_" in kind for kind in kinds))
+        self.assertEqual(len(quiz), 5)
 
 
 if __name__ == "__main__":
