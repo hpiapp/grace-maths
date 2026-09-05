@@ -118,17 +118,20 @@ def initialise_state() -> None:
         "streak": 0,
         "best_streak": 0,
         "current_area": "Primes & cubes",
+        "current_difficulty": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
 
-def start_quiz(area: str, mode: str, question_count: int) -> None:
+def start_quiz(area: str, mode: str, question_count: int, difficulty: str = "Warm-up") -> None:
     if area == "Fractions & percentages":
-        st.session_state.quiz = make_conversion_quiz(mode, question_count)
+        st.session_state.quiz = make_conversion_quiz(mode, question_count, difficulty=difficulty)
+        st.session_state.current_difficulty = difficulty
     else:
         st.session_state.quiz = make_quiz(mode, question_count)
+        st.session_state.current_difficulty = None
     st.session_state.current_area = area
     st.session_state.question_index = 0
     st.session_state.results = []
@@ -195,6 +198,17 @@ def render_setup() -> None:
             modes,
             default=default_mode,
         )
+        difficulty = "Warm-up"
+        if area == "Fractions & percentages":
+            difficulty = st.segmented_control(
+                "Difficulty",
+                ["Warm-up", "Stretch", "Challenge"],
+                default="Stretch",
+            ) or "Stretch"
+            st.caption(
+                "Warm-up: familiar facts · Stretch: reverse percentages · "
+                "Challenge: multi-step reasoning"
+            )
         question_count = st.select_slider(
             "Number of questions",
             options=[5, 10, 15, 20],
@@ -203,7 +217,7 @@ def render_setup() -> None:
         submitted = st.form_submit_button("Start practice  →", type="primary", use_container_width=True)
 
     if submitted:
-        start_quiz(area, mode or default_mode, question_count)
+        start_quiz(area, mode or default_mode, question_count, difficulty)
         st.rerun()
 
     with st.expander("How it works"):
@@ -290,6 +304,12 @@ def render_quiz() -> None:
         "percentage_decrease": "Price decrease",
         "percentage_restore": "Back to the original",
         "percentage_same_increase": "Down, then up",
+        "reverse_percentage": "Find the original",
+        "percentage_of_amount": "Mental percentage",
+        "compound_change": "Two-step change",
+        "percentage_difference": "Compare with the start",
+        "compare_discounts": "Which deal?",
+        "percentage_direction": "Different starting points",
     }
     label = labels.get(question.kind, "Number challenge")
     st.markdown(
@@ -379,7 +399,9 @@ def render_results() -> None:
     col1.metric("Score", f"{correct}/{total}")
     col2.metric("Accuracy", f"{accuracy}%")
     col3.metric("Avg. time", f"{average_time:.1f}s")
-    st.caption(f"Best streak: 🔥 {st.session_state.best_streak}")
+    difficulty = st.session_state.current_difficulty
+    difficulty_copy = f"{difficulty} · " if difficulty else ""
+    st.caption(f"{difficulty_copy}Best streak: 🔥 {st.session_state.best_streak}")
 
     if st.button("Play again", type="primary", use_container_width=True):
         reset_quiz()

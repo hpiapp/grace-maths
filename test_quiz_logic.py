@@ -3,6 +3,7 @@ import unittest
 
 from conversion_logic import (
     CONVERSION_FACTS,
+    build_advanced_change_bank,
     build_conversion_bank,
     build_percentage_change_pairs,
     check_choice,
@@ -43,12 +44,14 @@ class QuizLogicTests(unittest.TestCase):
         self.assertTrue(all(left != right for left, right in zip(quiz, quiz[1:])))
 
     def test_conversion_questions_have_four_distinct_choices(self):
-        bank = build_conversion_bank(random.Random(3))
-        self.assertEqual(len(bank), len(CONVERSION_FACTS) * 6)
-        for question in bank:
-            self.assertEqual(len(question.options), 4)
-            self.assertEqual(len(set(question.options)), 4)
-            self.assertIn(question.answer, question.options)
+        for difficulty in ("Warm-up", "Stretch", "Challenge"):
+            bank = build_conversion_bank(random.Random(3), difficulty)
+            fact_count = sum(fact.difficulty == difficulty for fact in CONVERSION_FACTS)
+            self.assertEqual(len(bank), fact_count * 6)
+            for question in bank:
+                self.assertEqual(len(question.options), 4)
+                self.assertEqual(len(set(question.options)), 4)
+                self.assertIn(question.answer, question.options)
 
     def test_twenty_five_percent_decrease_does_not_reverse_with_same_increase(self):
         pairs = build_percentage_change_pairs(random.Random(4))
@@ -60,12 +63,38 @@ class QuizLogicTests(unittest.TestCase):
         self.assertFalse(check_choice(restore, "25%"))
 
     def test_mixed_conversion_quiz_guarantees_both_change_directions(self):
-        quiz = make_conversion_quiz("Mixed practice", 5, random.Random(8))
-        kinds = {question.kind for question in quiz}
-        self.assertIn("percentage_decrease", kinds)
-        self.assertIn("percentage_restore", kinds)
-        self.assertTrue(any("_to_" in kind for kind in kinds))
-        self.assertEqual(len(quiz), 5)
+        for difficulty in ("Warm-up", "Stretch", "Challenge"):
+            quiz = make_conversion_quiz("Mixed practice", 5, random.Random(8), difficulty)
+            kinds = {question.kind for question in quiz}
+            self.assertIn("percentage_decrease", kinds)
+            self.assertIn("percentage_restore", kinds)
+            self.assertTrue(any("_to_" in kind for kind in kinds))
+            if difficulty != "Warm-up":
+                self.assertTrue(
+                    kinds
+                    & {
+                        "reverse_percentage",
+                        "percentage_of_amount",
+                        "compound_change",
+                        "percentage_difference",
+                        "compare_discounts",
+                        "percentage_direction",
+                    }
+                )
+            self.assertEqual(len(quiz), 5)
+
+    def test_harder_levels_include_reverse_and_multi_step_questions(self):
+        stretch = build_advanced_change_bank("Stretch", random.Random(2))
+        challenge = build_advanced_change_bank("Challenge", random.Random(2))
+        self.assertIn("reverse_percentage", {question.kind for question in stretch})
+        self.assertIn("compound_change", {question.kind for question in challenge})
+        self.assertIn("compare_discounts", {question.kind for question in challenge})
+        self.assertTrue(all(question.answer in question.options for question in stretch + challenge))
+
+    def test_every_percentage_level_can_make_a_twenty_question_quiz(self):
+        for difficulty in ("Warm-up", "Stretch", "Challenge"):
+            quiz = make_conversion_quiz("Percentage change", 20, random.Random(5), difficulty)
+            self.assertEqual(len(quiz), 20)
 
 
 if __name__ == "__main__":

@@ -25,25 +25,38 @@ class ConversionFact:
     fraction: str
     decimal: str
     percentage: str
+    difficulty: str
 
 
 CONVERSION_FACTS = (
-    ConversionFact("1/2", "0.5", "50%"),
-    ConversionFact("1/4", "0.25", "25%"),
-    ConversionFact("3/4", "0.75", "75%"),
-    ConversionFact("1/5", "0.2", "20%"),
-    ConversionFact("2/5", "0.4", "40%"),
-    ConversionFact("3/5", "0.6", "60%"),
-    ConversionFact("4/5", "0.8", "80%"),
-    ConversionFact("1/10", "0.1", "10%"),
-    ConversionFact("3/10", "0.3", "30%"),
-    ConversionFact("7/10", "0.7", "70%"),
-    ConversionFact("1/20", "0.05", "5%"),
-    ConversionFact("3/20", "0.15", "15%"),
-    ConversionFact("1/8", "0.125", "12.5%"),
-    ConversionFact("3/8", "0.375", "37.5%"),
-    ConversionFact("5/8", "0.625", "62.5%"),
-    ConversionFact("7/8", "0.875", "87.5%"),
+    ConversionFact("1/2", "0.5", "50%", "Warm-up"),
+    ConversionFact("1/4", "0.25", "25%", "Warm-up"),
+    ConversionFact("3/4", "0.75", "75%", "Warm-up"),
+    ConversionFact("1/5", "0.2", "20%", "Warm-up"),
+    ConversionFact("2/5", "0.4", "40%", "Warm-up"),
+    ConversionFact("3/5", "0.6", "60%", "Warm-up"),
+    ConversionFact("4/5", "0.8", "80%", "Warm-up"),
+    ConversionFact("1/10", "0.1", "10%", "Warm-up"),
+    ConversionFact("3/10", "0.3", "30%", "Warm-up"),
+    ConversionFact("7/10", "0.7", "70%", "Warm-up"),
+    ConversionFact("1/20", "0.05", "5%", "Warm-up"),
+    ConversionFact("3/20", "0.15", "15%", "Warm-up"),
+    ConversionFact("1/8", "0.125", "12.5%", "Stretch"),
+    ConversionFact("3/8", "0.375", "37.5%", "Stretch"),
+    ConversionFact("5/8", "0.625", "62.5%", "Stretch"),
+    ConversionFact("7/8", "0.875", "87.5%", "Stretch"),
+    ConversionFact("11/20", "0.55", "55%", "Stretch"),
+    ConversionFact("13/20", "0.65", "65%", "Stretch"),
+    ConversionFact("17/20", "0.85", "85%", "Stretch"),
+    ConversionFact("19/20", "0.95", "95%", "Stretch"),
+    ConversionFact("1/3", "0.333…", "33⅓%", "Challenge"),
+    ConversionFact("2/3", "0.666…", "66⅔%", "Challenge"),
+    ConversionFact("1/6", "0.166…", "16⅔%", "Challenge"),
+    ConversionFact("5/6", "0.833…", "83⅓%", "Challenge"),
+    ConversionFact("1/16", "0.0625", "6.25%", "Challenge"),
+    ConversionFact("3/16", "0.1875", "18.75%", "Challenge"),
+    ConversionFact("5/16", "0.3125", "31.25%", "Challenge"),
+    ConversionFact("7/16", "0.4375", "43.75%", "Challenge"),
 )
 
 
@@ -56,15 +69,29 @@ class PriceScenario:
     restore_percentage: str
 
 
-PRICE_SCENARIOS = (
-    PriceScenario("headphones", 80, 25, 60, "33⅓%"),
-    PriceScenario("trainers", 60, 25, 45, "33⅓%"),
-    PriceScenario("coat", 120, 25, 90, "33⅓%"),
-    PriceScenario("book set", 40, 25, 30, "33⅓%"),
-    PriceScenario("board game", 50, 20, 40, "25%"),
-    PriceScenario("bicycle", 200, 20, 160, "25%"),
-    PriceScenario("lamp", 40, 50, 20, "100%"),
-)
+PRICE_SCENARIOS = {
+    "Warm-up": (
+        PriceScenario("headphones", 80, 25, 60, "33⅓%"),
+        PriceScenario("trainers", 60, 25, 45, "33⅓%"),
+        PriceScenario("coat", 120, 25, 90, "33⅓%"),
+        PriceScenario("book set", 40, 25, 30, "33⅓%"),
+        PriceScenario("board game", 50, 20, 40, "25%"),
+        PriceScenario("bicycle", 200, 20, 160, "25%"),
+        PriceScenario("lamp", 40, 50, 20, "100%"),
+    ),
+    "Stretch": (
+        PriceScenario("jacket", 72, 25, 54, "33⅓%"),
+        PriceScenario("concert ticket", 90, 20, 72, "25%"),
+        PriceScenario("desk", 80, 40, 48, "66⅔%"),
+        PriceScenario("sports kit", 84, 50, 42, "100%"),
+    ),
+    "Challenge": (
+        PriceScenario("tablet", 280, 25, 210, "33⅓%"),
+        PriceScenario("weekend trip", 360, 20, 288, "25%"),
+        PriceScenario("camera", 240, 40, 144, "66⅔%"),
+        PriceScenario("season ticket", 336, 50, 168, "100%"),
+    ),
+}
 
 
 def _options(answer: str, pool: tuple[str, ...], rng: random.Random) -> tuple[str, ...]:
@@ -78,9 +105,15 @@ def _money(value: float) -> str:
     return f"£{int(value)}" if value.is_integer() else f"£{value:.2f}"
 
 
-def build_conversion_bank(rng: random.Random | None = None) -> list[ChoiceQuestion]:
+def build_conversion_bank(
+    rng: random.Random | None = None,
+    difficulty: str = "Warm-up",
+) -> list[ChoiceQuestion]:
     """Build fraction/decimal/percentage conversion questions."""
     rng = rng or random.Random()
+    facts = tuple(fact for fact in CONVERSION_FACTS if fact.difficulty == difficulty)
+    if not facts:
+        raise ValueError(f"Unknown difficulty: {difficulty}")
     fractions = tuple(fact.fraction for fact in CONVERSION_FACTS)
     decimals = tuple(fact.decimal for fact in CONVERSION_FACTS)
     percentages = tuple(fact.percentage for fact in CONVERSION_FACTS)
@@ -95,7 +128,7 @@ def build_conversion_bank(rng: random.Random | None = None) -> list[ChoiceQuesti
         ("decimal_to_fraction", "What is {decimal} as a fraction in its simplest form?", "fraction", fractions),
     )
 
-    for fact in CONVERSION_FACTS:
+    for fact in facts:
         explanation = f"{fact.fraction} = {fact.decimal} = {fact.percentage}"
         values = {
             "fraction": fact.fraction,
@@ -119,13 +152,18 @@ def build_conversion_bank(rng: random.Random | None = None) -> list[ChoiceQuesti
 
 def build_percentage_change_pairs(
     rng: random.Random | None = None,
+    difficulty: str = "Warm-up",
 ) -> list[tuple[ChoiceQuestion, ChoiceQuestion, ChoiceQuestion]]:
     """Build paired price-change questions, including the journey back to the original."""
     rng = rng or random.Random()
     restore_pool = ("20%", "25%", "33⅓%", "40%", "50%", "75%", "100%")
     pairs: list[tuple[ChoiceQuestion, ChoiceQuestion, ChoiceQuestion]] = []
 
-    for scenario in PRICE_SCENARIOS:
+    scenarios = PRICE_SCENARIOS.get(difficulty)
+    if scenarios is None:
+        raise ValueError(f"Unknown difficulty: {difficulty}")
+
+    for scenario in scenarios:
         original = float(scenario.original)
         sale = float(scenario.sale)
         discount = original - sale
@@ -195,15 +233,161 @@ def build_percentage_change_pairs(
     return pairs
 
 
+def build_advanced_change_bank(
+    difficulty: str,
+    rng: random.Random | None = None,
+) -> list[ChoiceQuestion]:
+    """Build reverse and multi-step percentage questions for harder levels."""
+    rng = rng or random.Random()
+    if difficulty == "Warm-up":
+        return []
+
+    stretch_specs = (
+        (
+            "reverse_percentage",
+            "A hoodie costs £72 after a 20% reduction. What was its original price?",
+            "£90",
+            ("£80", "£86.40", "£90", "£92"),
+            "After 20% off, £72 is 80% of the original. One tenth is £9, so 100% is £90.",
+        ),
+        (
+            "reverse_percentage",
+            "A bag costs £54 after a 25% reduction. What was its original price?",
+            "£72",
+            ("£67.50", "£72", "£74", "£81"),
+            "£54 is 75% of the original. Divide by 3 to get 25% (£18), then multiply by 4: £72.",
+        ),
+        (
+            "reverse_percentage",
+            "A chair costs £48 after a 40% reduction. What was its original price?",
+            "£80",
+            ("£67.20", "£72", "£80", "£88"),
+            "£48 is the 60% left. If 60% is £48, then 10% is £8 and 100% is £80.",
+        ),
+        (
+            "percentage_of_amount",
+            "A £60 game console increases in price by 15%. What is the new price?",
+            "£69",
+            ("£66", "£69", "£72", "£75"),
+            "10% of £60 is £6 and 5% is £3. Add £9 to £60 to get £69.",
+        ),
+        (
+            "percentage_of_amount",
+            "A £80 bicycle is reduced by 15%. What is the new price?",
+            "£68",
+            ("£65", "£68", "£72", "£76"),
+            "10% of £80 is £8 and 5% is £4. Subtract £12 from £80 to get £68.",
+        ),
+        (
+            "percentage_of_amount",
+            "A shop takes 12.5% off a £64 skateboard. How much is the discount?",
+            "£8",
+            ("£6.40", "£8", "£12", "£16"),
+            "12.5% is one eighth. £64 ÷ 8 = £8.",
+        ),
+        (
+            "percentage_of_amount",
+            "A £70 annual pass increases in price by 30%. What is the new price?",
+            "£91",
+            ("£79", "£88", "£91", "£100"),
+            "10% of £70 is £7, so 30% is £21. Add £21 to £70 to get £91.",
+        ),
+        (
+            "reverse_percentage",
+            "A game costs £70 after a 12.5% reduction. What was its original price?",
+            "£80",
+            ("£77.50", "£78.75", "£80", "£82.50"),
+            "12.5% is one eighth, so £70 is seven eighths. One eighth is £10 and eight eighths is £80.",
+        ),
+    )
+
+    challenge_specs = (
+        (
+            "compound_change",
+            "A £120 coat is reduced by 25%, then the sale price rises by 25%. What is the final price?",
+            "£112.50",
+            ("£90", "£105", "£112.50", "£120"),
+            "£120 falls to £90. Then 25% of £90 is £22.50, giving £112.50—not £120.",
+        ),
+        (
+            "compound_change",
+            "A £200 laptop is reduced by 20%, then reduced by another 10%. What is the final price?",
+            "£144",
+            ("£140", "£144", "£150", "£160"),
+            "20% off gives £160. A further 10% off £160 is £16, leaving £144.",
+        ),
+        (
+            "compound_change",
+            "A £80 ticket rises by 25%, then falls by 20%. What is the final price?",
+            "£80",
+            ("£76", "£80", "£84", "£100"),
+            "£80 rises to £100. A 20% fall from £100 is £20, taking it back to £80.",
+        ),
+        (
+            "percentage_difference",
+            "A £120 coat falls by 25%, then rises by 25%. How far below the original price does it finish?",
+            "£7.50",
+            ("£0", "£6", "£7.50", "£15"),
+            "It falls to £90, then rises to £112.50. That is £7.50 below £120.",
+        ),
+        (
+            "compare_discounts",
+            "Shop A takes 25% off £80. Shop B takes 20% off £75. Which sale price is lower?",
+            "They are the same",
+            ("Shop A", "Shop B", "They are the same", "Not enough information"),
+            "Shop A charges £60. Shop B also charges £60, so the sale prices are equal.",
+        ),
+        (
+            "compare_discounts",
+            "Shop A takes 25% off £120. Shop B takes 15% off £100. Which is cheaper?",
+            "Shop B by £5",
+            ("Shop A by £5", "Shop B by £5", "Shop B by £10", "They are the same"),
+            "Shop A charges £90. Shop B charges £85, which is £5 cheaper.",
+        ),
+        (
+            "reverse_percentage",
+            "A price is reduced by 15% and becomes £68. What was the original price?",
+            "£80",
+            ("£76", "£78.20", "£80", "£83"),
+            "£68 is 85% of the original. Since 5% is £4, 100% is £80.",
+        ),
+        (
+            "percentage_direction",
+            "A price rises from £64 to £80, then falls from £80 to £64. Which statement is correct?",
+            "Up 25%, then down 20%",
+            ("Up 20%, then down 20%", "Up 25%, then down 20%", "Up 25%, then down 25%", "Up 16%, then down 16%"),
+            "The £16 rise is 25% of £64. The £16 fall is 20% of £80 because the starting value changed.",
+        ),
+    )
+
+    specs = stretch_specs if difficulty == "Stretch" else challenge_specs if difficulty == "Challenge" else None
+    if specs is None:
+        raise ValueError(f"Unknown difficulty: {difficulty}")
+
+    return [
+        ChoiceQuestion(
+            kind=kind,
+            prompt=prompt,
+            options=_options(answer, options, rng),
+            answer=answer,
+            hint="Work from the current starting value at each step.",
+            explanation=explanation,
+        )
+        for kind, prompt, answer, options, explanation in specs
+    ]
+
+
 def make_conversion_quiz(
     mode: str,
     question_count: int,
     rng: random.Random | None = None,
+    difficulty: str = "Warm-up",
 ) -> list[ChoiceQuestion]:
     """Make a balanced quiz and guarantee both directions of percentage change."""
     rng = rng or random.Random()
-    conversion_bank = build_conversion_bank(rng)
-    change_pairs = build_percentage_change_pairs(rng)
+    conversion_bank = build_conversion_bank(rng, difficulty)
+    change_pairs = build_percentage_change_pairs(rng, difficulty)
+    advanced_bank = build_advanced_change_bank(difficulty, rng)
 
     if mode == "Conversions":
         bank = conversion_bank
@@ -213,6 +397,11 @@ def make_conversion_quiz(
         # Always include decrease-from-original and increase-from-current.
         required = [chosen_pair[0], chosen_pair[1]]
         change_bank = [question for pair in change_pairs for question in pair if question not in required]
+        if advanced_bank and question_count >= 3:
+            advanced_question = rng.choice(advanced_bank)
+            required.append(advanced_question)
+            advanced_bank.remove(advanced_question)
+        change_bank.extend(advanced_bank)
         if mode == "Percentage change":
             bank = change_bank
         else:

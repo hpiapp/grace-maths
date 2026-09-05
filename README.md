@@ -26,6 +26,12 @@ The app includes randomised questions, mental-maths-friendly multiple choice, re
 
 Every mixed fractions-and-percentages session includes both sides of a price change. For example, reducing £80 by 25% gives £60, but returning from £60 to £80 requires a 33⅓% increase—not 25%.
 
+The conversion practice has three difficulty levels:
+
+- **Warm-up:** familiar equivalences and direct price changes
+- **Stretch:** eighths, reverse percentages, and less obvious mental calculations
+- **Challenge:** thirds and sixteenths, compound changes, deal comparisons, and changed starting values
+
 ## Run the tests
 
 ```bash
